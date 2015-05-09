@@ -11,7 +11,7 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent
 @status alpha
 @homepage http://olosmusic.github.io/olos-spectrograph
 -->
-<polymer-element name="olos-spectrograph" attributes="inputAudio freqMode ampMode binCount smoothing output">
+<polymer-element name="olos-spectrograph" attributes="inputAudio freqMode ampMode freqMin freqMax binCount smoothing output">
   <template>
     <link rel="stylesheet" href="olos-spectrograph.css"></link>
 
@@ -66,6 +66,10 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent
         */
         speed: 2,
 
+        // TO DO: implement these to allow zoom
+        freqMin: 20,
+        freqMax: audioContext.sampleRate/2,
+
         /**
          *  Rate of smoothing for the frequency spectrum amplitude analysis.
          *  Between 0 and 1.
@@ -110,7 +114,6 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent
             'get': function() {return self.analyserNode.fftSize / 2 ;},
             'set' : function(val) {self.analyserNode.fftSize = val*2;}
           });
-
 
         },
 
@@ -163,18 +166,6 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent
               var freq = new Uint8Array(self.binCount);
               self.analyserNode.getByteFrequencyData(freq);
 
-              // copy the previous image
-              // var ctx = sketch.cnv.canvas.getContext('2d');
-              // var prevData = ctx.getImageData(speed, 0, sketch.width - speed, sketch.height);
-              // var prevCnv = createImage(prevData);
-              // var prevCnv = sketch.cnv.getPixels();
-
-              // var prevCnv = sketch.createImage(sketch.width, sketch.height);
-              // prevCnv.loadPixels();
-
-              // erase canvas
-              // sketch.background(255,255,255);
-
               sketch.copy(sketch.cnv,0,0,sketch.width,sketch.height,-speed,0,sketch.width,sketch.height);
 
               // iterate thru current freq spectrum
@@ -189,19 +180,12 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent
                   value = freq[i];
                 }
 
-                // var c = sketch.color(int(value), 255, 255/2);
-                // console.log(c)
-                var c = int(value);
+                var c = value;
                 sketch.fill(c, 255, c);
                 var percent = i / freq.length;
                 var y = percent * sketch.height;
                 sketch.rect(sketch.width - speed, sketch.height - y, speed, sketch.height/freq.length);
               }
-
-              // draw the previous image one slice over
-              // ctx.putImageData(prevCnv, 0, 0, sketch.width-speed, sketch.height);
-              // translate(-speed, 0);
-              // sketch.image(prevCnv, -speed, 0, 20, 20);
 
             };
 
