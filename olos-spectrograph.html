@@ -1,0 +1,253 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../core-input/core-input.html">
+<!--
+A spectrograph plots the frequency spectrum over time. The Y axis is frequencies
+from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent 
+##### Example
+
+
+@element olos-spectrograph
+@blurb 
+@status alpha
+@homepage http://olosmusic.github.io/olos-spectrograph
+-->
+<polymer-element name="olos-spectrograph" attributes="inputAudio freqMode ampMode binCount smoothing output">
+  <template>
+    <link rel="stylesheet" href="olos-spectrograph.css"></link>
+
+    <div class="controls">
+    </div>
+
+    <div id="canvas_container">
+    </div>
+
+  </template>
+
+  <script>
+
+    (function(params){
+
+      Polymer('olos-spectrograph', {
+
+        // inputs and outputs
+        inputAudio: null,
+        output: null,
+
+        /**
+         *  Web Audio API analyserNode
+         *  
+         *  @property analyserNode
+         */
+        analyserNode: null,
+
+        /**
+         *  Scaling of the frequency spectrum (Y axis). 
+         *  Can be "lin" (linear), or "log" (logarithmic).
+         *  Logarithmic gives more weight to the lower part
+         *  of the frequency spectrum, which more closely
+         *  resembles how we perceive pitch, while linear emphasizes
+         *  harmonic relationships.
+         *  
+         *  @property freqMode
+         *  @type String
+         *  @default 'log'
+         */
+        freqMode: 'log',
+
+        ampMode: 'log',
+
+        /**
+        *  Speed that the spectograph passes by, in pixels per draw loop.
+        *  The draw loop is ~15 frames per second.
+        *  
+        *  @property speed
+        *  @type Number
+        *  @default 2
+        */
+        speed: 2,
+
+        /**
+         *  Rate of smoothing for the frequency spectrum amplitude analysis.
+         *  Between 0 and 1.
+         *  
+         *  @property smoothing
+         *  @type Number
+         *  @default 0.8
+         */
+        smoothing: 0.8,
+
+        /**
+         *  Number of bins the FFT will return as it divides the frequency spectrum.
+         *  Between 16 and 2048.
+         *  
+         *  @property binCount
+         *  @type Number
+         *  @default 256
+         */
+        binCount: 256,
+
+        // p5 sketch
+        _sketch: null,
+
+        publicMethods: ['setup', 'drawLoop'],
+
+        rootfolder: '../olos-spectrograph/',
+
+        ready: function() {
+          var self = this;
+          self._audioContext = audioContext;
+
+          self.playing = false;
+
+          self.inputAudio = self.analyserNode = self.output = audioContext.createAnalyser();
+
+          Object.defineProperty(self, 'smoothing', {
+            'get': function() {return self.analyserNode.smoothingTimeConstant;},
+            'set' : function(val) {self.analyserNode.smoothingTimeConstant = val;}
+          });
+
+          Object.defineProperty(self, 'binCount', {
+            'get': function() {return self.analyserNode.fftSize / 2 ;},
+            'set' : function(val) {self.analyserNode.fftSize = val*2;}
+          });
+
+
+        },
+
+        domReady: function(){
+          this._initCanvas();
+        },
+
+        setup: function() {
+          this.freqMode = 'log';
+          this.smoothing = 0.8;
+          this.binCount = 256;
+        },
+
+        // TO DO: animate!
+        _draw: function() {
+          this._p5.draw();
+        },
+
+        dispose: function() {
+          var nodes = ['output', 'inputAudio', 'analyserNode'];
+          for (var i = 0; i < nodes.length; i++) {
+            try {
+              var node = self[nodes[i]];
+              node.disconnect();
+              delete node;
+              node = null;
+            } catch(e) { }
+          }
+        },
+
+        _initCanvas: function() {
+          var self = this;
+
+          self._sketch = function(sketch) {
+
+            sketch.setup = function() {
+              sketch.cnv = sketch.createCanvas(255, 255);
+              sketch.background(0,0,0);
+
+              sketch.colorMode(HSB, 255);
+              sketch.noLoop();
+              sketch.noStroke();
+            };
+
+            sketch.draw = function() {
+
+              var freqMode = self.freqMode;
+              var speed = self.speed;
+
+              var freq = new Uint8Array(self.binCount);
+              self.analyserNode.getByteFrequencyData(freq);
+
+              // copy the previous image
+              // var ctx = sketch.cnv.canvas.getContext('2d');
+              // var prevData = ctx.getImageData(speed, 0, sketch.width - speed, sketch.height);
+              // var prevCnv = createImage(prevData);
+              // var prevCnv = sketch.cnv.getPixels();
+
+              // var prevCnv = sketch.createImage(sketch.width, sketch.height);
+              // prevCnv.loadPixels();
+
+              // erase canvas
+              // sketch.background(255,255,255);
+
+              sketch.copy(sketch.cnv,0,0,sketch.width,sketch.height,-speed,0,sketch.width,sketch.height);
+
+              // iterate thru current freq spectrum
+              for (var i = 0; i < freq.length; i++) {
+
+                var value;
+
+                if (freqMode === 'log') {
+                  logIndex = self.logScale(i, freq.length);
+                  value = freq[logIndex];
+                } else {
+                  value = freq[i];
+                }
+
+                // var c = sketch.color(int(value), 255, 255/2);
+                // console.log(c)
+                var c = int(value);
+                sketch.fill(c, 255, c);
+                var percent = i / freq.length;
+                var y = percent * sketch.height;
+                sketch.rect(sketch.width - speed, sketch.height - y, speed, sketch.height/freq.length);
+              }
+
+              // draw the previous image one slice over
+              // ctx.putImageData(prevCnv, 0, 0, sketch.width-speed, sketch.height);
+              // translate(-speed, 0);
+              // sketch.image(prevCnv, -speed, 0, 20, 20);
+
+            };
+
+            sketch.onresize = function() {
+              var compStyle = getComputedStyle(self);
+              var w = Number(compStyle.width.split('px')[0]);
+              var h = Number(compStyle.height.split('px')[0]);
+
+              sketch.copy(sketch.cnv,0,0,sketch.width,sketch.height,0,0,w,h);
+
+              sketch.resizeCanvas(w, h);
+            };
+
+          };
+
+          self._p5 = new p5(self._sketch, self.$.canvas_container); 
+        },
+
+        drawLoop: function() {
+          // TO DO
+        },
+
+        resize: function() {
+          this._p5.onresize();
+        },
+
+        ///////// helper functions via
+        /// https://github.com/borismus/spectrograph/blob/master/g-spectrograph.js MIT license
+
+        /**
+         * Given an index and the total number of entries, return the
+         * log-scaled value.
+         */
+        logScale: function(index, total, opt_base) {
+          var base = opt_base || 2;
+          var logmax = this.logBase(total + 1, base);
+          var exp = logmax * index / total;
+          return Math.round(Math.pow(base, exp) - 1);
+        },
+
+        logBase: function(val, base) {
+          return Math.log(val) / Math.log(base);
+        }
+
+      });
+
+    })();
+  </script>
+</polymer-element>

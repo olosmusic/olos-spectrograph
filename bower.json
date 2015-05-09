@@ -1,0 +1,12 @@
+{
+  "name": "olos-spectrograph",
+  "version": "0.0.0",
+  "license": "MIT",  
+  "main": "olos-spectrograph.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#~0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.2.6"
+  }
+}

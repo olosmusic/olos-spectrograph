@@ -1,0 +1,33 @@
+:host {
+  display: block;
+/*  color: green;
+  font-family: 'RobotoDraft', sans-serif;
+*/}
+
+.controls {
+  height:20px;
+  top:40px;
+  position:absolute;
+  z-index:1000;
+  width:100%;
+  color:white;
+  /*padding:5px;*/
+}
+
+.freq {
+  color:white;
+/*  position:fixed;
+  z-index:1000;
+  width:100px;
+  top:40px;
+  left:40px;*/
+}
+
+
+canvas {
+  /*position:absolute;*/
+  /*top: 0;*/
+  top: 30px;
+  /*position: absolute;*/
+}
+}
