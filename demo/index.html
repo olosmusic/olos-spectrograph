@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oscillator Demo</title>
+
+    <script src="../../p5js/p5.js"></script>
+
+    <script src="../../Tone.js/build/Tone.js"></script>
+    <script>
+      var audioContext = Tone.Transport.context;
+    </script>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="../olos-spectrograph.html">
+    <style>
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+
+
+  </head>
+
+  <body unresolved>
+
+    <olos-spectrograph>
+    </olos-spectrograph>
+
+    <script>
+    /*
+      window.onbeforeunload = function(e) {
+          return '';
+      };
+    */
+    </script>  
+  </body>
+
+</html>
