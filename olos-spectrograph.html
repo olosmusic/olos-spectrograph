@@ -152,6 +152,8 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent amplit
               self.analyserNode.fftSize = val * 2;
             }
           });
+        },
+        attached: function() {
           this._initCanvas();
         },
         setup: function () {
