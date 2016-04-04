@@ -4,6 +4,8 @@
 A spectrograph plots the frequency spectrum over time. The Y axis is frequencies
 from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent amplitude at the given frequency.
 
+Play with `speed`, `smoothing` and `bincount`
+
 ##### Example
 
 
@@ -80,7 +82,7 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent amplit
            */
           freqMode: {
             type: String,
-            value: 'log',
+            value: 'lin',
             notify: true
           },
           // inputs and outputs
@@ -157,7 +159,8 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent amplit
           this._initCanvas();
         },
         setup: function () {
-          this.freqMode = 'log';
+          // freqMode can be 'lin' or 'log'
+          this.freqMode = 'lin';
           this.smoothing = 0.8;
           this.binCount = 256;
         },
@@ -172,7 +175,6 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent amplit
             try {
               var node = self[nodes[i]];
               node.disconnect();
-              delete node;
               node = null;
             } catch(e) { }
           }
@@ -186,6 +188,7 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent amplit
               sketch.colorMode(sketch.HSB, 255);
               sketch.noLoop();
               sketch.noStroke();
+              sketch.pixelDensity = 2;
             };
             sketch.draw = function () {
               var freqMode = self.freqMode;
@@ -211,13 +214,15 @@ from lowest (20Hz) to highest (22050Hz). X axis is time. Colors represent amplit
             };
             sketch.onresize = function () {
               var compStyle = getComputedStyle(self);
-              var w = Number(compStyle.width.split('px')[0]);
-              var h = Number(compStyle.height.split('px')[0]);
+              var w = Math.round( Number(compStyle.width.split('px')[0]) );
+              var h = Math.round( Number(compStyle.height.split('px')[0]) );
               sketch.copy(sketch.cnv, 0, 0, sketch.width, sketch.height, 0, 0, w, h);
               sketch.resizeCanvas(w, h);
+              sketch.pixelDensity = 2;
             };
           };
           self._p5 = new p5(self._sketch, self.$.canvas_container);
+          self._p5.canvas.style.visibility = 'visible';
         },
         drawLoop: function () {
         },

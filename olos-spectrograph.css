@@ -29,5 +29,5 @@ canvas {
   /*top: 0;*/
   top: 30px;
   /*position: absolute;*/
-}
+  visibility: visible !important;
 }
